@@ -15,14 +15,9 @@ class TodolistSeeder extends Seeder
     {
         Todolist::insert([
             [
-                'title' => 'Belajar Laravel',
-                'desc' => 'Belajar Laravel',
+                'title' => 'Create API',
+                'desc' => 'Create API sanctum Laravel',
                 'is_done' => false
-            ],
-            [
-                'title' => 'Belajar API',
-                'desc' => 'Belajar API sanctum Laravel',
-                'is_done' => true
             ]
         ]);
     }

@@ -6,6 +6,7 @@ use App\Http\Resources\TodolistResource;
 use App\Models\Todolist;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class TodolistController extends Controller
@@ -17,7 +18,15 @@ class TodolistController extends Controller
   {
     $todolist = Todolist::latest()->get();
 
-    return TodolistResource::collection($todolist);
+    try {
+      return TodolistResource::collection($todolist);
+    } catch (Exception $e) {
+      Log::error("Failed get todolist", ['error' => $e->getMessage()]);
+      return response()->json([
+        'message' => 'Failed to get todolist data',
+        'error' => $e->getMessage()
+      ]);
+    }
   }
 
   /**
@@ -97,6 +106,23 @@ class TodolistController extends Controller
    */
   public function destroy(string $id)
   {
-    //
+
+    $todo = Todolist::find($id);
+
+    if (!$todo) {
+      return response()->json(['message' => 'Todolist not found'], 404);
+    }
+
+    try {
+      $todo->delete();
+      return response()->json([
+        'message' => 'Successfully deleted todolist data'
+      ], 200);
+    } catch (Exception $e) {
+      return response()->json([
+        'message' => 'Failed to deleted todolist data',
+        'error' => $e->getMessage()
+      ], 500);
+    }
   }
 }
