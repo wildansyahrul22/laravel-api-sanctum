@@ -3,34 +3,51 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Exception;
 
 class LoginController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
     public function __invoke(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
         try {
-            //code...
-            if (Auth::attempt($credentials)) {
-                // $request->session()->regenerate();
+            // Validasi input
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
 
-                $user = Auth::user();
-
-                return response()->json(['success' => true, 'user' => $user, 'token' => $user->createToken('auth_token')->plainTextToken], 200);
+            // Coba autentikasi user
+            if (!Auth::attempt($credentials)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid email or password.'
+                ], 401);
             }
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            $user = Auth::user();
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful.',
+                'user' => $user,
+                'token' => $token,
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal Server Error',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }

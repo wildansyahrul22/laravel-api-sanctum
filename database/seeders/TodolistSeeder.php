@@ -13,12 +13,12 @@ class TodolistSeeder extends Seeder
      */
     public function run(): void
     {
-        Todolist::insert([
-            [
-                'title' => 'Create API',
-                'desc' => 'Create API sanctum Laravel',
-                'is_done' => false
-            ]
-        ]);
+        // Todolist::insert([
+        //     [
+        //         'title' => 'Create API',
+        //         'desc' => 'Create API sanctum Laravel',
+        //         'is_done' => false
+        //     ]
+        // ]);
     }
 }

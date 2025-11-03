@@ -3,29 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TodolistResource;
+use App\Models\Logging;
 use App\Models\Todolist;
 use Exception;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class TodolistController extends Controller
 {
+  use AuthorizesRequests;
   /**
    * Display a listing of the resource.
    */
   public function index()
   {
-    $todolist = Todolist::latest()->get();
+    $todolist = Todolist::latest()->where('user_id', Auth::user()->id)->get();
 
     try {
       return TodolistResource::collection($todolist);
     } catch (Exception $e) {
       Log::error("Failed get todolist", ['error' => $e->getMessage()]);
+
+      Logging::record("Failed get all todolist: " . $e->getMessage());
+
       return response()->json([
-        'message' => 'Failed to get todolist data',
+        'message' => 'Failed to get all todolist data',
         'error' => $e->getMessage()
-      ]);
+      ], 500);
     }
   }
 
@@ -34,6 +41,8 @@ class TodolistController extends Controller
    */
   public function store(Request $request)
   {
+    $this->authorize('create', Todolist::class);
+
     $data = $request->validate([
       'title' => 'required|min:3|max:255',
       'desc' => 'required',
@@ -46,13 +55,16 @@ class TodolistController extends Controller
       return response()->json(['message' => 'Todolist already exists'], 409);
     }
 
-    Todolist::create($data);
 
     // return response()->json(['message' => 'successfully added todolist data'], 201);
     try {
-      return response()->json(['message' => 'successfully added todolist data']);
+      $data['user_id'] = Auth::user()->id;
+      Todolist::create($data);
+
+      return response()->json(['message' => 'successfully created todolist data'], 201);
     } catch (ValidationException $e) {
-      return response()->json(['message' => 'failed to add todolist data', 'error' => $e->errors()]);
+      Logging::record("Failed created todolist: " . $e->getMessage());
+      return response()->json(['message' => 'failed to created todolist data', 'error' => $e->errors()]);
     }
   }
 
@@ -94,6 +106,7 @@ class TodolistController extends Controller
         'data' => $todo
       ], 200);
     } catch (Exception $e) {
+      Logging::record("Failed updated todolist with id " . $id . ": " . $e->getMessage());
       return response()->json([
         'message' => 'Failed to update todolist data',
         'error' => $e->getMessage()
@@ -119,6 +132,7 @@ class TodolistController extends Controller
         'message' => 'Successfully deleted todolist data'
       ], 200);
     } catch (Exception $e) {
+      Logging::record("Failed deleted todolist with id " . $id . ": " . $e->getMessage());
       return response()->json([
         'message' => 'Failed to deleted todolist data',
         'error' => $e->getMessage()

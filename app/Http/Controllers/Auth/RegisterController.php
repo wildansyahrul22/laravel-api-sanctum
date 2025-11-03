@@ -23,11 +23,10 @@ class RegisterController extends Controller
         'password' => bcrypt($request->password),
       ]);
 
-      $token = $user->createToken('auth_token')->plainTextToken;
-
       return response([
-        'user' => $user,
-        'token' => $token
+        'success' => true,
+        'message' => 'Successfully registered',
+        'user' => $user
       ]);
     } catch (QueryException $e) {
       if ($e->errorInfo[1] === 1062) { // MySQL duplicate entry code

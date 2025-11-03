@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('loggings', function (Blueprint $table) {
             $table->id();
             $table->string('user_id')->nullable();
+            $table->string('message');
             $table->string('ip_address');
             $table->string('action'); // GET, POST, PUT, DELETE
             $table->timestamps();
